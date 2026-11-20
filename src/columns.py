@@ -1,0 +1,5 @@
+CASE = "case:concept:name"
+ACTIVITY = "concept:name"
+TIME = "time:timestamp"
+LIFECYCLE = "lifecycle:transition"
+RESOURCE = "org:resource"
