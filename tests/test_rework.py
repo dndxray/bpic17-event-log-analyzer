@@ -104,3 +104,12 @@ def test_filter_does_not_mutate_input_log():
     repeated_complete(log)
     same_resource_complete(log)
     assert log.equals(before)
+
+
+def test_count_ignoring_lifecycle_is_only_a_comparison():
+    from rework import count_ignoring_lifecycle
+    log = (LogBuilder().case("C1")
+           .event(TARGET, "schedule").event(TARGET, "start")
+           .event(TARGET, "complete").build())
+    assert count_ignoring_lifecycle(log) == 1   # 3 event lifecycle campur
+    assert repeated_complete(log).count == 0    # tapi complete hanya 1x
