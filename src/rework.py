@@ -50,6 +50,14 @@ def complete_events(df, activity=TARGET):
     return order_events(df.loc[mask.fillna(False)])[EVIDENCE_COLUMNS]
 
 
+def count_ignoring_lifecycle(df, activity=TARGET, minimum=MIN_REPEAT):
+    """PEMBANDING SAJA (bukan jawaban soal): case dengan >= `minimum` event aktivitas
+    target dari lifecycle APA PUN. Menunjukkan mengapa filter 'complete' wajib."""
+    mask = (_norm(df[ACTIVITY]) == activity.strip().casefold()).fillna(False)
+    counts = df.loc[mask].groupby(CASE).size()
+    return int((counts >= minimum).sum())
+
+
 def repeated_complete(df, activity=TARGET, minimum=MIN_REPEAT):
     """Exercise 11.15: case dengan >= `minimum` complete aktivitas target."""
     events = complete_events(df, activity)
