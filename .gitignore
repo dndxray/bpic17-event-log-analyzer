@@ -225,3 +225,5 @@ __marimo__/
 *.xes
 *.xes.gz
 data/
+
+.vscode
