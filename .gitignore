@@ -226,4 +226,9 @@ __marimo__/
 *.xes.gz
 data/
 
+# Hasil ekspor CSV
+ringkasan_jawaban.csv
+daftar_case.csv
+bukti_*.csv
+
 .vscode

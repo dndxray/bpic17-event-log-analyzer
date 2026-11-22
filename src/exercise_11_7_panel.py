@@ -13,11 +13,11 @@ SUMMARY_COLUMNS = [
     ("mean", "Mean cycle time (hari)", 150, "e"),
 ]
 CASE_COLUMNS = [
-    ("case", "Case ID", 220, "w"),
-    ("start", "Mulai (UTC)", 130, "w"),
-    ("end", "Selesai (UTC)", 130, "w"),
-    ("days", "Durasi (hari)", 90, "e"),
-    ("bukti", "Bukti", 260, "w"),
+    ("case", "Case ID", 170, "w"),
+    ("start", "Mulai (UTC)", 110, "w"),
+    ("end", "Selesai (UTC)", 110, "w"),
+    ("days", "Durasi (hari)", 70, "e"),
+    ("bukti", "Bukti", 170, "w"),
 ]
 
 
@@ -44,26 +44,30 @@ class Exercise117Panel(ttk.Frame):
         self.results = []
         self.shown = None
 
-        ttk.Label(self, text="Exercise 11.7 (A-E)", font=("TkDefaultFont", 12, "bold")).pack(anchor="w")
-        self.status = ttk.Label(self, text="Muat file XES terlebih dahulu.")
+        ttk.Label(self, text="Exercise 11.7 (A-E)", style="PageTitle.TLabel").pack(
+            anchor="w", pady=(0, 6))
+        self.status = ttk.Label(self, text="Muat file XES terlebih dahulu.",
+                                style="Muted.TLabel")
         self.status.pack(anchor="w", pady=(0, 6))
 
         self.summary = make_tree(self, SUMMARY_COLUMNS, height=5)
         self.summary.pack(fill="x")
         self.summary.bind("<<TreeviewSelect>>", self.on_select)
 
-        self.rule = ttk.Label(self, text="", wraplength=760, justify="left")
+        self.rule = ttk.Label(self, text="", wraplength=640, justify="left",
+                              style="Muted.TLabel")
         self.rule.pack(anchor="w", pady=(8, 2))
-        self.note = ttk.Label(self, text="")
+        self.note = ttk.Label(self, text="", style="Muted.TLabel")
         self.note.pack(anchor="w")
 
         top = ttk.Frame(self)
         top.pack(fill="x", pady=(6, 4))
-        ttk.Label(top, text="Cari case ID:").pack(side="left")
+        ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.fill_cases())
-        ttk.Entry(top, textvariable=self.query, width=28).pack(side="left", padx=8)
-        self.info = ttk.Label(top, text="Klik dua kali sebuah case untuk melihat urutan event-nya.")
+        ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
+        self.info = ttk.Label(top, text="Klik dua kali sebuah case untuk melihat urutan event-nya.",
+                              style="Muted.TLabel")
         self.info.pack(side="left")
 
         body = ttk.Frame(self)
@@ -135,6 +139,18 @@ class Exercise117Panel(ttk.Frame):
         tree.pack(fill="both", expand=True)
         for row in events.itertuples(index=False):
             tree.insert("", "end", values=[str(v) for v in row])
+
+    def reset(self):
+        self.df = None
+        self.results = []
+        self.shown = None
+        self.summary.delete(*self.summary.get_children())
+        self.cases.delete(*self.cases.get_children())
+        self.status.config(text="Muat file XES terlebih dahulu.")
+        self.rule.config(text="")
+        self.note.config(text="")
+        self.info.config(text="Klik dua kali sebuah case untuk melihat urutan event-nya.")
+        self.query.set("")
 
 
 if __name__ == "__main__":
