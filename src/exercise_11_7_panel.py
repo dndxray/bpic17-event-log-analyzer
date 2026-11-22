@@ -8,17 +8,19 @@ from worker import run_async
 
 MAX_ROWS = 2000
 SUMMARY_COLUMNS = [
-    ("question", "Pertanyaan", 330, "w"),
-    ("count", "Jumlah case", 100, "e"),
-    ("mean", "Mean cycle time (hari)", 150, "e"),
+    ("question", "Pertanyaan", 250, "w"),
+    ("count", "Jumlah case", 75, "e"),
+    ("mean", "Mean (hari)", 80, "e"),
 ]
 CASE_COLUMNS = [
-    ("case", "Case ID", 170, "w"),
-    ("start", "Mulai (UTC)", 110, "w"),
-    ("end", "Selesai (UTC)", 110, "w"),
+    ("case", "Case ID", 145, "w"),
+    ("start", "Mulai (UTC)", 100, "w"),
+    ("end", "Selesai (UTC)", 100, "w"),
     ("days", "Durasi (hari)", 70, "e"),
-    ("bukti", "Bukti", 170, "w"),
+    ("bukti", "Bukti", 65, "w"),
 ]
+SUMMARY_LABEL = "Jawaban A-E (klik baris untuk melihat case-nya)"
+INFO_TEXT = "Klik dua kali sebuah case untuk melihat urutan event-nya"
 
 
 def thousands(number):
@@ -29,8 +31,13 @@ def make_tree(parent, columns, height):
     tree = ttk.Treeview(parent, columns=[c[0] for c in columns], show="headings", height=height)
     for key, title, width, anchor in columns:
         tree.heading(key, text=title)
-        tree.column(key, width=width, anchor=anchor)
+        tree.column(key, width=width, minwidth=50, anchor=anchor, stretch=True)
     return tree
+
+
+def wrap_to_width(label):
+    """Lebar bungkus teks mengikuti lebar label, bukan angka tetap."""
+    label.bind("<Configure>", lambda e: label.configure(wraplength=max(e.width - 4, 100)))
 
 
 def compute(df):
@@ -45,35 +52,46 @@ class Exercise117Panel(ttk.Frame):
         self.shown = None
 
         ttk.Label(self, text="Exercise 11.7 (A-E)", style="PageTitle.TLabel").pack(
-            anchor="w", pady=(0, 6))
+            anchor="w", pady=(0, 4))
         self.status = ttk.Label(self, text="Muat file XES terlebih dahulu.",
-                                style="Muted.TLabel")
-        self.status.pack(anchor="w", pady=(0, 6))
-
-        self.summary = make_tree(self, SUMMARY_COLUMNS, height=5)
-        self.summary.pack(fill="x")
-        self.summary.bind("<<TreeviewSelect>>", self.on_select)
-
-        self.rule = ttk.Label(self, text="", wraplength=640, justify="left",
-                              style="Muted.TLabel")
-        self.rule.pack(anchor="w", pady=(8, 2))
-        self.note = ttk.Label(self, text="", style="Muted.TLabel")
-        self.note.pack(anchor="w")
+                                style="Muted.TLabel", justify="left")
+        self.status.pack(fill="x", pady=(0, 2))
+        wrap_to_width(self.status)
+        self.rule = ttk.Label(self, text="", justify="left", style="Muted.TLabel")
+        self.rule.pack(fill="x", pady=(0, 6))
+        wrap_to_width(self.rule)
 
         top = ttk.Frame(self)
-        top.pack(fill="x", pady=(6, 4))
+        top.pack(fill="x", pady=(0, 6))
         ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.fill_cases())
         ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
-        self.info = ttk.Label(top, text="Klik dua kali sebuah case untuk melihat urutan event-nya.",
-                              style="Muted.TLabel")
-        self.info.pack(side="left")
+        self.note = ttk.Label(top, text="", style="Muted.TLabel")
+        self.note.pack(side="left")
 
+        # Dua tabel sejajar, dengan label di atas masing-masing.
         body = ttk.Frame(self)
         body.pack(fill="both", expand=True)
-        self.cases = make_tree(body, CASE_COLUMNS, height=12)
-        scroll = ttk.Scrollbar(body, orient="vertical", command=self.cases.yview)
+        body.columnconfigure(0, weight=5, uniform="col")
+        body.columnconfigure(1, weight=6, uniform="col")
+        body.rowconfigure(1, weight=1)
+
+        ttk.Label(body, text=SUMMARY_LABEL, style="Muted.TLabel").grid(
+            row=0, column=0, sticky="w", pady=(0, 4))
+        self.info = ttk.Label(body, text=INFO_TEXT, style="Muted.TLabel")
+        self.info.grid(row=0, column=1, sticky="w", pady=(0, 4), padx=(8, 0))
+
+        left = ttk.Frame(body)
+        left.grid(row=1, column=0, sticky="nsew")
+        self.summary = make_tree(left, SUMMARY_COLUMNS, height=5)
+        self.summary.pack(fill="both", expand=True)
+        self.summary.bind("<<TreeviewSelect>>", self.on_select)
+
+        right = ttk.Frame(body)
+        right.grid(row=1, column=1, sticky="nsew", padx=(8, 0))
+        self.cases = make_tree(right, CASE_COLUMNS, height=4)
+        scroll = ttk.Scrollbar(right, orient="vertical", command=self.cases.yview)
         self.cases.configure(yscrollcommand=scroll.set)
         self.cases.pack(side="left", fill="both", expand=True)
         scroll.pack(side="right", fill="y")
@@ -123,7 +141,7 @@ class Exercise117Panel(ttk.Frame):
                 case, start.strftime("%Y-%m-%d %H:%M"), end.strftime("%Y-%m-%d %H:%M"),
                 f"{days:.2f}", bukti))
         self.note.config(text=f"Menampilkan {min(len(data), MAX_ROWS)} dari {len(data)} case "
-                              f"(ekspor CSV memuat semuanya).")
+                              f"(ekspor CSV memuat semuanya)")
 
     def open_case(self, _event):
         item = self.cases.focus()
@@ -149,14 +167,13 @@ class Exercise117Panel(ttk.Frame):
         self.status.config(text="Muat file XES terlebih dahulu.")
         self.rule.config(text="")
         self.note.config(text="")
-        self.info.config(text="Klik dua kali sebuah case untuk melihat urutan event-nya.")
         self.query.set("")
 
 
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("BPIC17 Analyzer - Exercise 11.7")
-    root.geometry("820x640")
+    root.geometry("1100x640")
     panel = Exercise117Panel(root)
     ImportPanel(root, on_loaded=lambda df, info: panel.show(df)).pack(fill="x")
     panel.pack(fill="both", expand=True)

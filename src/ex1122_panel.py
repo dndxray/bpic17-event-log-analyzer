@@ -29,43 +29,42 @@ class Ex1122Panel(ttk.Frame):
         self.result = None
         self.on_open_case = on_open_case
 
-        ttk.Label(
+        self.heading = ttk.Label(
             self,
             text=f"Exercise 11.22: case yang punya {FIRST} lalu setelahnya {SECOND} (eventually follows, i < j)",
             wraplength=640, style="PageTitle.TLabel", justify="left",
-        ).pack(anchor="w", pady=(0, 6))
-
-        summary = ttk.Frame(self)
-        summary.pack(fill="x", pady=(8, 0))
-        self.labels = {}
-        for row, (key, text) in enumerate([
-            ("count", "Jumlah case lolos"),
-            ("total", "Total case (denominator)"),
-            ("percent", "Persentase"),
-        ]):
-            ttk.Label(summary, text=text, style="Muted.TLabel").grid(
-                row=row, column=0, sticky="w", padx=(0, 12), pady=2)
-            self.labels[key] = ttk.Label(summary, text="-",
-                                         font=("TkDefaultFont", 10, "bold"))
-            self.labels[key].grid(row=row, column=1, sticky="w", pady=2)
+        )
+        self.heading.pack(anchor="w", pady=(0, 2))
+        self.bind("<Configure>", lambda e: self.heading.config(wraplength=max(300, e.width - 40)))
 
         self.answer = ttk.Label(self, text="", font=("TkDefaultFont", 12, "bold"))
-        self.answer.pack(anchor="w", pady=(6, 0))
-        self.status = ttk.Label(self, text="", style="Muted.TLabel")
-        self.status.pack(anchor="w")
+        self.answer.pack(anchor="w", pady=(2, 0))
 
         top = ttk.Frame(self)
-        top.pack(fill="x", pady=(8, 4))
+        top.pack(fill="x", pady=(4, 4))
         ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.refresh())
         ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
         self.info = ttk.Label(top, text="", style="Muted.TLabel")
         self.info.pack(side="left")
+        self.status = ttk.Label(top, text="", style="Muted.TLabel")
+        self.status.pack(side="left", padx=12)
+
+        # timeline dipasang dulu di bawah agar ruangnya terjamin; tabel mengisi sisanya
+        self.canvas = tk.Canvas(self, height=90, background="white", highlightthickness=1,
+                                highlightbackground=BORDER)
+        self.canvas.pack(side="bottom", fill="x")
+        self.canvas.bind("<Configure>", lambda _e: self.draw_timeline())
+        ttk.Label(
+            self,
+            text="Timeline pasangan terpilih (klik baris; klik dua kali untuk buka di Case Explorer)",
+            style="Muted.TLabel",
+        ).pack(side="bottom", anchor="w", pady=(6, 2))
 
         body = ttk.Frame(self)
         body.pack(fill="both", expand=True)
-        self.table = ttk.Treeview(body, columns=[c[0] for c in COLUMNS], show="headings", height=10)
+        self.table = ttk.Treeview(body, columns=[c[0] for c in COLUMNS], show="headings", height=4)
         for key, title, width, anchor in COLUMNS:
             self.table.heading(key, text=title)
             self.table.column(key, width=width, anchor=anchor)
@@ -76,15 +75,6 @@ class Ex1122Panel(ttk.Frame):
         self.table.bind("<<TreeviewSelect>>", lambda _e: self.draw_timeline())
         self.table.bind("<Double-1>", lambda _e: self.open_selected())
 
-        ttk.Label(
-            self,
-            text="Timeline pasangan terpilih (klik baris; klik dua kali untuk buka di Case Explorer)",
-            style="Muted.TLabel",
-        ).pack(anchor="w", pady=(8, 0))
-        self.canvas = tk.Canvas(self, height=90, background="white", highlightthickness=1,
-                                highlightbackground=BORDER)
-        self.canvas.pack(fill="x")
-        self.canvas.bind("<Configure>", lambda _e: self.draw_timeline())
 
     def show(self, df):
         self.status.config(text="Menghitung...")
@@ -93,11 +83,9 @@ class Ex1122Panel(ttk.Frame):
     def set_result(self, result):
         self.result = result
         self.status.config(text="")
-        self.labels["count"].config(text=thousands(result["count"]))
-        self.labels["total"].config(text=thousands(result["total"]))
-        self.labels["percent"].config(text=f"{result['percent']:.2f}%".replace(".", ","))
         self.answer.config(
-            text=f"{thousands(result['count'])} dari {thousands(result['total'])} case ({result['percent']:.2f}%)"
+            text=(f"{thousands(result['count'])} dari {thousands(result['total'])} case = "
+                  f"{result['percent']:.2f}% (denominator: {thousands(result['total'])})")
         )
         self.refresh()
 
@@ -164,8 +152,6 @@ class Ex1122Panel(ttk.Frame):
     def reset(self):
         self.result = None
         self.status.config(text="")
-        for label in self.labels.values():
-            label.config(text="-")
         self.answer.config(text="")
         self.table.delete(*self.table.get_children())
         self.info.config(text="")

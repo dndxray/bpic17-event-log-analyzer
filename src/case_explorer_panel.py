@@ -7,17 +7,17 @@ from worker import run_async
 
 MAX_ROWS = 2000
 CASE_COLUMNS = [
-    ("case", "Case ID", 220, "w"),
-    ("events", "Jumlah event", 90, "e"),
-    ("start", "Mulai (UTC)", 130, "w"),
-    ("end", "Selesai (UTC)", 130, "w"),
+    ("case", "Case ID", 175, "w"),
+    ("events", "Jumlah event", 85, "e"),
+    ("start", "Mulai (UTC)", 140, "w"),
+    ("end", "Selesai (UTC)", 140, "w"),
 ]
 EVENT_COLUMNS = [
     ("no", "No", 40, "e"),
-    ("time", "Timestamp (UTC)", 150, "w"),
-    ("activity", "Aktivitas", 200, "w"),
-    ("lifecycle", "Lifecycle", 90, "w"),
-    ("resource", "Resource", 100, "w"),
+    ("time", "Timestamp (UTC)", 140, "w"),
+    ("activity", "Aktivitas", 190, "w"),
+    ("lifecycle", "Lifecycle", 80, "w"),
+    ("resource", "Resource", 80, "w"),
 ]
 
 
@@ -44,24 +44,33 @@ class CaseExplorerPanel(ttk.Frame):
         self.query.trace_add("write", lambda *_: self.refresh())
 
         ttk.Label(self, text="Case Explorer", style="PageTitle.TLabel").pack(
-            anchor="w", pady=(0, 10))
+            anchor="w", pady=(0, 4))
 
         top = ttk.Frame(self)
-        top.pack(fill="x", pady=(0, 8))
+        top.pack(fill="x", pady=(0, 4))
         ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
         self.info = ttk.Label(top, text="", style="Muted.TLabel")
         self.info.pack(side="left")
 
-        list_frame, self.case_table = make_table(self, CASE_COLUMNS, 8)
-        list_frame.pack(fill="both", expand=True)
+        # dua tabel berdampingan: kiri daftar case, kanan urutan event (hemat tinggi layar)
+        tables = ttk.Frame(self)
+        tables.pack(fill="both", expand=True)
+        tables.columnconfigure(0, weight=5, uniform="tabel")
+        tables.columnconfigure(1, weight=6, uniform="tabel")
+        tables.rowconfigure(1, weight=1)
+
+        ttk.Label(tables, text="Daftar case", style="Muted.TLabel").grid(
+            row=0, column=0, sticky="w", pady=(0, 2))
+        list_frame, self.case_table = make_table(tables, CASE_COLUMNS, 3)
+        list_frame.grid(row=1, column=0, sticky="nsew", padx=(0, 8))
         self.case_table.bind("<<TreeviewSelect>>", lambda _e: self.show_selected())
 
-        self.detail_title = ttk.Label(self, text="Pilih case untuk melihat urutan event",
+        self.detail_title = ttk.Label(tables, text="Pilih case untuk melihat urutan event",
                                       style="Muted.TLabel")
-        self.detail_title.pack(anchor="w", pady=(10, 4))
-        detail_frame, self.event_table = make_table(self, EVENT_COLUMNS, 10)
-        detail_frame.pack(fill="both", expand=True)
+        self.detail_title.grid(row=0, column=1, sticky="w", pady=(0, 2))
+        detail_frame, self.event_table = make_table(tables, EVENT_COLUMNS, 3)
+        detail_frame.grid(row=1, column=1, sticky="nsew")
 
     def show(self, df):
         self.df = df

@@ -37,6 +37,18 @@ class ExportPanel(ttk.Frame):
                                 justify="left", style="Muted.TLabel")
         self.status.pack(anchor="w", pady=(0, 8))
 
+        # tombol dipasang dulu di bawah agar tidak tergeser tabel yang mengisi ruang
+        buttons = ttk.Frame(self)
+        buttons.pack(side="bottom", fill="x", pady=(10, 0))
+        self.export_button = ttk.Button(buttons, text="Ekspor ke folder...",
+                                        style="Accent.TButton", command=self.export)
+        self.export_button.pack(side="left")
+        ttk.Label(
+            buttons,
+            text="5 file CSV: ringkasan, daftar case, dan bukti.",
+            style="Muted.TLabel",
+        ).pack(side="left", padx=10)
+
         body = ttk.Frame(self)
         body.pack(fill="both", expand=True)
         self.table = ttk.Treeview(body, columns=[c[0] for c in COLUMNS], show="headings",
@@ -48,17 +60,6 @@ class ExportPanel(ttk.Frame):
         self.table.configure(yscrollcommand=scroll.set)
         self.table.pack(side="left", fill="both", expand=True)
         scroll.pack(side="right", fill="y")
-
-        buttons = ttk.Frame(self)
-        buttons.pack(fill="x", pady=(10, 0))
-        self.export_button = ttk.Button(buttons, text="Ekspor ke folder...",
-                                        style="Accent.TButton", command=self.export)
-        self.export_button.pack(side="left")
-        ttk.Label(
-            buttons,
-            text="5 file CSV: ringkasan, daftar case, dan bukti.",
-            style="Muted.TLabel",
-        ).pack(side="left", padx=10)
 
     def show(self, df):
         self.df = df
