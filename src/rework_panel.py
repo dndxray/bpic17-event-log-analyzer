@@ -9,11 +9,11 @@ from worker import run_async
 
 MAX_ROWS = 2000
 EVIDENCE_COLUMNS = [
-    ("no", "No", 50, "e"),
-    ("time", "Timestamp (UTC)", 190, "w"),
-    ("activity", "Aktivitas", 230, "w"),
-    ("lifecycle", "Lifecycle", 100, "w"),
-    ("resource", "Resource", 120, "w"),
+    ("no", "No", 40, "e"),
+    ("time", "Timestamp (UTC)", 150, "w"),
+    ("activity", "Aktivitas", 200, "w"),
+    ("lifecycle", "Lifecycle", 90, "w"),
+    ("resource", "Resource", 100, "w"),
 ]
 
 
@@ -45,10 +45,10 @@ class ReworkPanel(ttk.Frame):
         self.result = None
         self.on_open_case = on_open_case
 
-        ttk.Label(self, text=self.title, font=("TkDefaultFont", 12, "bold"),
-                  wraplength=900, justify="left").pack(anchor="w")
-        self.rule = ttk.Label(self, text="Muat file XES terlebih dahulu.", wraplength=900,
-                              justify="left")
+        ttk.Label(self, text=self.title, style="PageTitle.TLabel",
+                  wraplength=640, justify="left").pack(anchor="w", pady=(0, 6))
+        self.rule = ttk.Label(self, text="Muat file XES terlebih dahulu.", wraplength=640,
+                              justify="left", style="Muted.TLabel")
         self.rule.pack(anchor="w", pady=(2, 6))
 
         summary = ttk.Frame(self)
@@ -56,24 +56,27 @@ class ReworkPanel(ttk.Frame):
         self.labels = {}
         for row, (key, text) in enumerate([("count", "Jumlah case lolos"),
                                            ("total", "Total case (denominator)")]):
-            ttk.Label(summary, text=text).grid(row=row, column=0, sticky="w", padx=(0, 12))
-            self.labels[key] = ttk.Label(summary, text="-")
-            self.labels[key].grid(row=row, column=1, sticky="w")
+            ttk.Label(summary, text=text, style="Muted.TLabel").grid(
+                row=row, column=0, sticky="w", padx=(0, 12), pady=2)
+            self.labels[key] = ttk.Label(summary, text="-",
+                                         font=("TkDefaultFont", 10, "bold"))
+            self.labels[key].grid(row=row, column=1, sticky="w", pady=2)
 
-        self.answer = ttk.Label(self, text="", font=("TkDefaultFont", 11, "bold"))
+        self.answer = ttk.Label(self, text="", font=("TkDefaultFont", 12, "bold"))
         self.answer.pack(anchor="w", pady=(6, 0))
-        self.note = ttk.Label(self, text="", wraplength=900, justify="left")
+        self.note = ttk.Label(self, text="", wraplength=640, justify="left",
+                              style="Muted.TLabel")
         self.note.pack(anchor="w")
-        self.status = ttk.Label(self, text="")
+        self.status = ttk.Label(self, text="", style="Muted.TLabel")
         self.status.pack(anchor="w")
 
         top = ttk.Frame(self)
         top.pack(fill="x", pady=(8, 4))
-        ttk.Label(top, text="Cari case ID:").pack(side="left")
+        ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.refresh())
-        ttk.Entry(top, textvariable=self.query, width=28).pack(side="left", padx=8)
-        self.info = ttk.Label(top, text="")
+        ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
+        self.info = ttk.Label(top, text="", style="Muted.TLabel")
         self.info.pack(side="left")
         self.export_button = ttk.Button(top, text="Ekspor CSV", command=self.export_csv)
         self.export_button.pack(side="right")
@@ -84,7 +87,8 @@ class ReworkPanel(ttk.Frame):
         self.table.bind("<Double-1>", lambda _e: self.open_selected())
 
         self.evidence_title = ttk.Label(
-            self, text="Klik baris untuk melihat event bukti (klik dua kali: buka di Case Explorer)")
+            self, text="Klik baris untuk melihat event bukti (klik dua kali: buka di Case Explorer)",
+            style="Muted.TLabel")
         self.evidence_title.pack(anchor="w", pady=(8, 4))
         frame, self.evidence_table = make_table(self, EVIDENCE_COLUMNS, 6)
         frame.pack(fill="both", expand=True)
@@ -168,11 +172,26 @@ class ReworkPanel(ttk.Frame):
         self.result.evidence.to_csv(evidence_path, index=False, encoding="utf-8-sig")
         self.status.config(text=f"Tersimpan: {path.name} dan {evidence_path.name}")
 
+    def reset(self):
+        self.result = None
+        self.status.config(text="")
+        self.rule.config(text="Muat file XES terlebih dahulu.")
+        self.labels["count"].config(text="-")
+        self.labels["total"].config(text="-")
+        self.answer.config(text="")
+        self.note.config(text="")
+        self.table.delete(*self.table.get_children())
+        self.evidence_table.delete(*self.evidence_table.get_children())
+        self.evidence_title.config(
+            text="Klik baris untuk melihat event bukti (klik dua kali: buka di Case Explorer)")
+        self.info.config(text="")
+        self.query.set("")
+
 
 class Ex1115Panel(ReworkPanel):
     title = f"Exercise 11.15: case dengan {TARGET} selesai (complete) minimal 2x"
     case_columns = [
-        ("case", "Case ID", 300, "w"),
+        ("case", "Case ID", 260, "w"),
         ("n", "Jumlah complete", 130, "e"),
     ]
 
@@ -188,9 +207,9 @@ class Ex1115Panel(ReworkPanel):
 class Ex1118Panel(ReworkPanel):
     title = f"Exercise 11.18: case dengan {TARGET} selesai minimal 2x oleh resource yang sama"
     case_columns = [
-        ("case", "Case ID", 300, "w"),
-        ("resource", "Resource", 140, "w"),
-        ("n", "Jumlah complete oleh resource", 200, "e"),
+        ("case", "Case ID", 250, "w"),
+        ("resource", "Resource", 130, "w"),
+        ("n", "Jumlah complete oleh resource", 170, "e"),
     ]
 
     @staticmethod

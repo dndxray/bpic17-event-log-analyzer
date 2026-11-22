@@ -7,17 +7,17 @@ from worker import run_async
 
 MAX_ROWS = 2000
 CASE_COLUMNS = [
-    ("case", "Case ID", 240, "w"),
-    ("events", "Jumlah event", 100, "e"),
-    ("start", "Mulai (UTC)", 140, "w"),
-    ("end", "Selesai (UTC)", 140, "w"),
+    ("case", "Case ID", 220, "w"),
+    ("events", "Jumlah event", 90, "e"),
+    ("start", "Mulai (UTC)", 130, "w"),
+    ("end", "Selesai (UTC)", 130, "w"),
 ]
 EVENT_COLUMNS = [
-    ("no", "No", 50, "e"),
-    ("time", "Timestamp (UTC)", 190, "w"),
-    ("activity", "Aktivitas", 260, "w"),
-    ("lifecycle", "Lifecycle", 100, "w"),
-    ("resource", "Resource", 120, "w"),
+    ("no", "No", 40, "e"),
+    ("time", "Timestamp (UTC)", 150, "w"),
+    ("activity", "Aktivitas", 200, "w"),
+    ("lifecycle", "Lifecycle", 90, "w"),
+    ("resource", "Resource", 100, "w"),
 ]
 
 
@@ -43,18 +43,22 @@ class CaseExplorerPanel(ttk.Frame):
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.refresh())
 
+        ttk.Label(self, text="Case Explorer", style="PageTitle.TLabel").pack(
+            anchor="w", pady=(0, 10))
+
         top = ttk.Frame(self)
         top.pack(fill="x", pady=(0, 8))
-        ttk.Label(top, text="Cari case ID:").pack(side="left")
-        ttk.Entry(top, textvariable=self.query, width=30).pack(side="left", padx=8)
-        self.info = ttk.Label(top, text="")
+        ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
+        ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
+        self.info = ttk.Label(top, text="", style="Muted.TLabel")
         self.info.pack(side="left")
 
         list_frame, self.case_table = make_table(self, CASE_COLUMNS, 8)
         list_frame.pack(fill="both", expand=True)
         self.case_table.bind("<<TreeviewSelect>>", lambda _e: self.show_selected())
 
-        self.detail_title = ttk.Label(self, text="Pilih case untuk melihat urutan event")
+        self.detail_title = ttk.Label(self, text="Pilih case untuk melihat urutan event",
+                                      style="Muted.TLabel")
         self.detail_title.pack(anchor="w", pady=(10, 4))
         detail_frame, self.event_table = make_table(self, EVENT_COLUMNS, 10)
         detail_frame.pack(fill="both", expand=True)
@@ -110,6 +114,15 @@ class CaseExplorerPanel(ttk.Frame):
             self.case_table.see(iid)
         elif self.df is not None:
             self.show_case(case_id)
+
+    def reset(self):
+        self.df = None
+        self.cases = None
+        self.case_table.delete(*self.case_table.get_children())
+        self.event_table.delete(*self.event_table.get_children())
+        self.info.config(text="")
+        self.detail_title.config(text="Pilih case untuk melihat urutan event")
+        self.query.set("")
 
 
 if __name__ == "__main__":

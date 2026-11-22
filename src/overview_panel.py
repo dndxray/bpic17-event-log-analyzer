@@ -30,16 +30,22 @@ def thousands(number):
 class OverviewPanel(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent, padding=10)
+        ttk.Label(self, text="Ringkasan log", style="PageTitle.TLabel").grid(
+            row=0, column=0, columnspan=3, sticky="w", pady=(0, 10))
+
         self.values = {}
-        for row, (key, text) in enumerate(METRICS):
-            ttk.Label(self, text=text).grid(row=row, column=0, sticky="w", padx=(0, 12))
-            self.values[key] = ttk.Label(self, text="-")
-            self.values[key].grid(row=row, column=1, sticky="w")
+        for row, (key, text) in enumerate(METRICS, start=1):
+            ttk.Label(self, text=text, style="Muted.TLabel").grid(
+                row=row, column=0, sticky="w", padx=(0, 12), pady=2)
+            self.values[key] = ttk.Label(self, text="-",
+                                         font=("TkDefaultFont", 10, "bold"))
+            self.values[key].grid(row=row, column=1, sticky="w", pady=2)
 
-        self.status = ttk.Label(self, text="")
-        self.status.grid(row=len(METRICS), column=0, columnspan=2, sticky="w", pady=(6, 0))
+        self.status = ttk.Label(self, text="", style="Muted.TLabel")
+        self.status.grid(row=len(METRICS) + 1, column=0, columnspan=2, sticky="w",
+                         pady=(6, 0))
 
-        table_row = len(METRICS) + 1
+        table_row = len(METRICS) + 2
         self.table = ttk.Treeview(
             self, columns=[c[0] for c in TABLE_COLUMNS], show="headings", height=12
         )
@@ -72,6 +78,12 @@ class OverviewPanel(ttk.Frame):
 
     def fail(self, error):
         self.status.config(text=f"Gagal menghitung: {error}")
+
+    def reset(self):
+        for label in self.values.values():
+            label.config(text="-")
+        self.table.delete(*self.table.get_children())
+        self.status.config(text="")
 
 
 if __name__ == "__main__":

@@ -2,15 +2,16 @@ import tkinter as tk
 from tkinter import ttk
 
 from ex1122 import FIRST, SECOND, eventually_follows
+from theme import BORDER
 from worker import run_async
 
 MAX_ROWS = 2000
 COLUMNS = [
-    ("case", "Case ID", 220, "w"),
-    ("first", f"{FIRST} (UTC)", 140, "w"),
-    ("second", f"{SECOND} (UTC)", 140, "w"),
-    ("days", "Jarak (hari)", 90, "e"),
-    ("pos", "Posisi i -> j", 90, "e"),
+    ("case", "Case ID", 180, "w"),
+    ("first", f"{FIRST} (UTC)", 130, "w"),
+    ("second", f"{SECOND} (UTC)", 130, "w"),
+    ("days", "Jarak (hari)", 80, "e"),
+    ("pos", "Posisi i -> j", 80, "e"),
 ]
 
 
@@ -31,8 +32,8 @@ class Ex1122Panel(ttk.Frame):
         ttk.Label(
             self,
             text=f"Exercise 11.22: case yang punya {FIRST} lalu setelahnya {SECOND} (eventually follows, i < j)",
-            wraplength=720,
-        ).pack(anchor="w")
+            wraplength=640, style="PageTitle.TLabel", justify="left",
+        ).pack(anchor="w", pady=(0, 6))
 
         summary = ttk.Frame(self)
         summary.pack(fill="x", pady=(8, 0))
@@ -42,22 +43,24 @@ class Ex1122Panel(ttk.Frame):
             ("total", "Total case (denominator)"),
             ("percent", "Persentase"),
         ]):
-            ttk.Label(summary, text=text).grid(row=row, column=0, sticky="w", padx=(0, 12))
-            self.labels[key] = ttk.Label(summary, text="-")
-            self.labels[key].grid(row=row, column=1, sticky="w")
+            ttk.Label(summary, text=text, style="Muted.TLabel").grid(
+                row=row, column=0, sticky="w", padx=(0, 12), pady=2)
+            self.labels[key] = ttk.Label(summary, text="-",
+                                         font=("TkDefaultFont", 10, "bold"))
+            self.labels[key].grid(row=row, column=1, sticky="w", pady=2)
 
-        self.answer = ttk.Label(self, text="", font=("TkDefaultFont", 11, "bold"))
+        self.answer = ttk.Label(self, text="", font=("TkDefaultFont", 12, "bold"))
         self.answer.pack(anchor="w", pady=(6, 0))
-        self.status = ttk.Label(self, text="")
+        self.status = ttk.Label(self, text="", style="Muted.TLabel")
         self.status.pack(anchor="w")
 
         top = ttk.Frame(self)
         top.pack(fill="x", pady=(8, 4))
-        ttk.Label(top, text="Cari case ID:").pack(side="left")
+        ttk.Label(top, text="Cari case ID:", style="Muted.TLabel").pack(side="left")
         self.query = tk.StringVar()
         self.query.trace_add("write", lambda *_: self.refresh())
-        ttk.Entry(top, textvariable=self.query, width=30).pack(side="left", padx=8)
-        self.info = ttk.Label(top, text="")
+        ttk.Entry(top, textvariable=self.query, width=24).pack(side="left", padx=8)
+        self.info = ttk.Label(top, text="", style="Muted.TLabel")
         self.info.pack(side="left")
 
         body = ttk.Frame(self)
@@ -73,10 +76,13 @@ class Ex1122Panel(ttk.Frame):
         self.table.bind("<<TreeviewSelect>>", lambda _e: self.draw_timeline())
         self.table.bind("<Double-1>", lambda _e: self.open_selected())
 
-        ttk.Label(self, text="Timeline pasangan terpilih (klik baris; klik dua kali untuk buka di Case Explorer)").pack(
-            anchor="w", pady=(8, 0)
-        )
-        self.canvas = tk.Canvas(self, height=90, background="white", highlightthickness=1, highlightbackground="#bbb")
+        ttk.Label(
+            self,
+            text="Timeline pasangan terpilih (klik baris; klik dua kali untuk buka di Case Explorer)",
+            style="Muted.TLabel",
+        ).pack(anchor="w", pady=(8, 0))
+        self.canvas = tk.Canvas(self, height=90, background="white", highlightthickness=1,
+                                highlightbackground=BORDER)
         self.canvas.pack(fill="x")
         self.canvas.bind("<Configure>", lambda _e: self.draw_timeline())
 
@@ -154,6 +160,17 @@ class Ex1122Panel(ttk.Frame):
         item = self.selected_item()
         if item is not None and self.on_open_case is not None:
             self.on_open_case(item["case"])
+
+    def reset(self):
+        self.result = None
+        self.status.config(text="")
+        for label in self.labels.values():
+            label.config(text="-")
+        self.answer.config(text="")
+        self.table.delete(*self.table.get_children())
+        self.info.config(text="")
+        self.canvas.delete("all")
+        self.query.set("")
 
 
 if __name__ == "__main__":
